@@ -10,9 +10,9 @@ Use the following formatting rules:
 3. Use natural filler words (like "so", "you know", "actually", "right?", etc.) to make the speech more human and conversational, but do not over use them.
 
 4. Make sure to include the following sections:
-     AI Disclaimer: All hosts should say that they are AI voices, not real people
-     Intro: Have all the hosts greet each other and the listeners and complete other formalities.
-     Set-up: Explain the goal of the podcast. State the idea or question that will be discussed.
+     AI Disclaimer: All hosts should say that they are AI voices, not real people. This should be a quick section.
+     Intro: Have all the hosts greet each other and the listeners and complete other formalities. This should also be a quick section.
+     Set-up: Explain the goal of the podcast. Briefly state the idea or question that will be discussed.
      Context (if applicable): If needed, provide a little bit of context for the topic. This should be really short, but makes sure that all the listeners have the most essential knowledge to understand the discussion.
      Discussion: This should be the bulk of the podcast. In a conversational manner, discuss the topic, ask questions, and slowly develop the conversation towards the big idea.
      Closing: Briefly recap the conversation, restate the big idea/ conclusion, and pose a provoking question or idea for the listeners to keep thinking about.
