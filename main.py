@@ -188,17 +188,18 @@ def generate_whole_podcast_order(instructions: list[dict[str, str]]) -> list[str
     log("generate_whole_podcast_order: end")
 
     # Add our custom items to the queue
-    audio_clip_queue.insert(0, 'public/audio/intro.mp3')
+    audio_clip_queue.insert(0, 'public/audio/STATIC_intro.mp3')
     log('Added the intro sound effect to the start of the clip queue')
-    audio_clip_queue.append('public/audio/outro.mp3')
+    audio_clip_queue.append('public/audio/STATIC_outro.mp3')
     log('Added the outro sound effect to the end of the clip queue')
 
 
     return audio_clip_queue
 
 # Method to stitch clips together and speed up audio
-def stitch_clips(queue: list[str], podcast_name_to_use: str) -> str:
+def stitch_clips(queue: list[str], podcast_name_to_use: str, speed: float) -> str:
     log("stitch_clips: start")
+
     def speed_up(audio: AudioSegment, speed: float) -> AudioSegment:
         log(f"speed_up: original frame_rate={audio.frame_rate}, speed={speed}")
         new_frame_rate = int(audio.frame_rate * speed)
@@ -218,11 +219,19 @@ def stitch_clips(queue: list[str], podcast_name_to_use: str) -> str:
     for i, file_path in enumerate(queue):
         log(f"stitch_clips: processing file {i}: {file_path}")
         clip = AudioSegment.from_mp3(file_path)
-        sped_up = speed_up(clip, 1.05)
-        combined += sped_up
+
+        basename = os.path.basename(file_path)
+        if basename.startswith("STATIC_"):
+            log(f"Skipping speed-up for STATIC clip: {basename}")
+            processed_clip = clip
+        else:
+            processed_clip = speed_up(clip, speed)
+            log(f"Applied speed-up to: {basename}")
+
+        combined += processed_clip
         if i < len(queue) - 1:
             combined += pause
-    
+
     combined.export(output_fp, format="mp3")
     log(f"Podcast exported to {output_fp}")
     log("stitch_clips: end")
@@ -285,7 +294,7 @@ if __name__ == '__main__':
     ai_generated_title = use_ai_to_gen_podcast_filename(topic)
     instructions = parse_into_instructions(script)
     clips = generate_whole_podcast_order(instructions)
-    podcast_path = stitch_clips(clips, ai_generated_title)
+    podcast_path = stitch_clips(clips, ai_generated_title, speed=10.05)
     log(f"Main: finished, podcast available at {podcast_path}")
 
     clean_up()
