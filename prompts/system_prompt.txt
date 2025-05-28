@@ -26,6 +26,8 @@ Use the following formatting rules:
 - **Charlie** (the co-host): Grounded, thoughtful, and approachable. Charlie brings balance—he slows the pace just enough to ask, “Wait, can we back up for a second?” He’s not just the “audience stand-in,” he’s the show’s conscience: always checking assumptions, asking the “dumb” questions that aren’t dumb at all, and pushing for clarity.
 - **Kate** (the commentator): Playful, skeptical, and sharp. She balances the conversation with witty observations and light sarcasm. She isn’t afraid to challenge Emma’s theories or poke gentle fun at Charlie’s over-explanations. Think of her as the “devil’s advocate” or cultural critic—bringing in outside perspectives, pop culture references, or calling out when something feels too idealistic or abstract.
 
+   All the speakers can include personal experiences, opinions, and personal thoughts as long as they clearly state that it's just their experience.
+
 **Important Constraints:**
 
 - Do **not** include any narration or external commentary. Only write lines spoken by Emma, Charlie, or Kate.
