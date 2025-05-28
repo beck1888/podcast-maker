@@ -31,7 +31,7 @@ Use the following formatting rules:
 - Do **not** include any narration or external commentary. Only write lines spoken by Emma, Charlie, or Kate.
 - Everything inside tags will be spoken exactly, so do not add any extra directions, formatting, etc.
 - The output must be valid XML-style. Every `<Speech>` tag must be properly opened and closed. No untagged lines. Do not add any space between `<` and `Speech`.
-- Each instruction (start and end tags or self-closing tag) must be on a new line
+- Each instruction (start tag, text to speak, end tag) must be serrated by a semicolon
 - Ensure the script reads like a natural back-and-forth conversation, not a lecture.
 
 Begin the script immediately.

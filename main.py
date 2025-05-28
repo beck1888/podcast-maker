@@ -16,6 +16,7 @@ KEEP_LOGS: bool = True
 AI_MODEL_FOR_WRITING_SCRIPT: str = 'gpt-4.1'
 SPEECH_SPEED_MULTIPLIER: float = 1.04
 DELAY_BETWEEN_CLIPS_IN_MS: float = 200
+LANGUAGE: str = 'English'
 
 # Uniform debug logging function
 def log(message: str) -> None:
@@ -23,6 +24,8 @@ def log(message: str) -> None:
         with open('logs.txt', 'a') as f:
             timestamp = datetime.now().strftime("%I:%M:%S %p")
             f.write(f"{timestamp} [DEBUG] {message}\n")
+log('\n'*2)
+log("STARTING NEW LOG")
 
 # API Key getter from 1Password
 def get_openai_api_key_from_op(item_name: str = "OpenAI API Key", field: str = "credential") -> str:
@@ -55,7 +58,7 @@ client = OpenAI(api_key=get_openai_api_key_from_op())
 log('OpenAI client initialized')
 
 # Method to generate the script
-def make_script(topic: str) -> str:
+def make_script(topic: str, lang: str) -> str:
     log(f"make_script: start (topic='{topic}')")
     # Load the prompts
     log("Loading system prompt")
@@ -69,8 +72,25 @@ def make_script(topic: str) -> str:
     user_prompt = user_prompt.replace('{{TOPIC}}', topic)
     log('User prompt loaded and placeholder replaced')
 
+    if lang.lower() == 'english' or lang.lower() == "" or not lang.lower:
+        log('make_script: English or non-specified version requested, skipping adding any instructions about translation.')
+    else:
+        log(f"make_script: Non-english language detected in call: (lang='{lang}'). Appending translation instruction.")
+        user_prompt += f' Although the tags should stay in English, write JUST the spoken content in {lang} while keeping all non-spoken content such as tags in English and as specified in the system instructions.'
+
+    # Assemble api messages
+    _messages: list[dict[str, str]] = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": user_prompt}
+        ]
+
+    # Log the system messages in logs for easier debugging
+    log('make_script: logging script wiring api messages next')
+    log(str(_messages))
+    log('make_script: ended logging script writing api messages')
+
     # Use the OpenAI chat completions api to generate the script
-    log('Requesting chat completion')
+    log('make_script: Requesting chat completion')
     response = client.chat.completions.create(
         model=AI_MODEL_FOR_WRITING_SCRIPT,
         messages=[
@@ -79,7 +99,7 @@ def make_script(topic: str) -> str:
         ]
     )
     script = response.choices[0].message.content
-    log('Chat completion received')
+    log('make_script: Chat completion received')
 
     result = script or "Error generating podcast!"
     log(f"make_script: end, result length={len(result)}")
@@ -124,7 +144,7 @@ def parse_line(line: str) -> dict[str, str]:
 # Method to parse the script into instructions
 def parse_into_instructions(script: str) -> list[dict[str, str]]:
     log("parse_into_instructions: start")
-    lines = script.split('\n')
+    lines = script.split(';') # Separate by semicolon instead
     log(f"Script split into {len(lines)} lines")
 
     queue: list[dict[str, str]] = []
@@ -270,6 +290,8 @@ def clean_up():
     log('removed the tmp directory')
     client.close()
     log('closed the openai client')
+    log("ENDING LOG RUN")
+    log("\n"*2)
 
 # Main execution
 if __name__ == '__main__':
@@ -280,7 +302,7 @@ if __name__ == '__main__':
     topic = input("Enter a topic: ")
 
     with spinner("Writing script"):
-        script = make_script(topic)
+        script = make_script(topic, lang=LANGUAGE)
 
     with spinner("Generating title"):
         ai_generated_title = use_ai_to_gen_podcast_filename(topic)
