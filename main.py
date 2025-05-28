@@ -140,11 +140,6 @@ def parse_into_instructions(script: str) -> list[dict[str, str]]:
             log(f"Instruction appended: {instruction}")
     log(f"parse_into_instructions: end, total instructions={len(queue)}")
 
-    # Add our custom items to the queue
-    queue.insert(0, 'public/audio/intro.mp3')
-    log('Added the intro sound effect to the start of the clip queue')
-    queue.append('public/audio/outro.mp3')
-    log('Added the outro sound effect to the end of the clip queue')
 
     return queue
 
@@ -190,6 +185,14 @@ def generate_whole_podcast_order(instructions: list[dict[str, str]]) -> list[str
         else:
             log(f"Unsupported instruction '{task}', skipping")
     log("generate_whole_podcast_order: end")
+
+    # Add our custom items to the queue
+    audio_clip_queue.insert(0, 'public/audio/intro.mp3')
+    log('Added the intro sound effect to the start of the clip queue')
+    audio_clip_queue.append('public/audio/outro.mp3')
+    log('Added the outro sound effect to the end of the clip queue')
+
+
     return audio_clip_queue
 
 # Method to stitch clips together and speed up audio
