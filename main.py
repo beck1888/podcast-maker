@@ -181,10 +181,6 @@ def generate_whole_podcast_order(instructions: list[dict[str, str]]) -> list[str
                     speech_instruction_hash_for_fp=instruction['hash']
                 )
             )
-        elif task == 'sfx':
-            # Skip implementation for now
-            log('found sfx instruction but skipping for now')
-            pass
         else:
             log(f'Error: {task} is not a valid instruction... skipping...')
 
