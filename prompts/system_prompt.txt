@@ -32,6 +32,7 @@ Use the following formatting rules:
 - Everything inside tags will be spoken exactly, so do not add any extra directions, formatting, etc.
 - The output must be valid XML-style. Every `<Speech>` tag must be properly opened and closed. No untagged lines. Do not add any space between `<` and `Speech`.
 - Each instruction (start tag, text to speak, end tag) must be serrated by a semicolon
+   - Do not use a semicolon in any speech. ONLY use semicolons to serrate speakers/tags
 - Ensure the script reads like a natural back-and-forth conversation, not a lecture.
 
 Begin the script immediately.

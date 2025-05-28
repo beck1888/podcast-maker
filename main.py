@@ -16,7 +16,7 @@ KEEP_LOGS: bool = True
 AI_MODEL_FOR_WRITING_SCRIPT: str = 'gpt-4.1'
 SPEECH_SPEED_MULTIPLIER: float = 1.04
 DELAY_BETWEEN_CLIPS_IN_MS: float = 200
-LANGUAGE: str = 'English'
+LANGUAGE: str = 'Russian'
 
 # Uniform debug logging function
 def log(message: str) -> None:
