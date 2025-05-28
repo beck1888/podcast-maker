@@ -197,7 +197,7 @@ def generate_whole_podcast_order(instructions: list[dict[str, str]]) -> list[str
     return audio_clip_queue
 
 # Method to stitch clips together and speed up audio
-def stitch_clips(queue: list[str]) -> str:
+def stitch_clips(queue: list[str], podcast_name_to_use: str) -> str:
     log("stitch_clips: start")
     def speed_up(audio: AudioSegment, speed: float) -> AudioSegment:
         log(f"speed_up: original frame_rate={audio.frame_rate}, speed={speed}")
@@ -208,12 +208,9 @@ def stitch_clips(queue: list[str]) -> str:
     os.makedirs(out_dir, exist_ok=True)
     log(f"Output directory ensured: {out_dir}")
 
-    existing = [f for f in os.listdir(out_dir) if f.endswith(".mp3") and f[:3].isdigit()]
-    ids = [int(f[:3]) for f in existing]
-    next_id = max(ids) + 1 if ids else 1
-    filename = f"{next_id:03}.mp3"
+    filename = f"{podcast_name_to_use}.mp3"
     output_fp = os.path.join(out_dir, filename)
-    log(f"Next output file determined: {output_fp}")
+    log(f"Output file determined: {output_fp}")
 
     combined = AudioSegment.silent(duration=0)
     pause = AudioSegment.silent(duration=200)
@@ -230,6 +227,30 @@ def stitch_clips(queue: list[str]) -> str:
     log(f"Podcast exported to {output_fp}")
     log("stitch_clips: end")
     return output_fp
+
+# Use AI to rename to file so it's easier to find
+def use_ai_to_gen_podcast_filename(topic: str) -> str:
+    log('use_ai_to_gen_podcast_filename: start')
+    naming_prompt: str = f"A person has just gotten done making a podcast about this topic: {topic}. Please give the file name for the podcast a clear and super short title of 2-3 words so it's easy to find. Use title case. Return just the file name and nothing else (no extensions, etc). Prioritize clarity and specificity over grammar."
+
+    log('use_ai_to_gen_podcast_filename: calling api')
+    new_title = client.chat.completions.create(
+        model='gpt-4.1-nano',
+        messages=[
+            {
+                "role": "user",
+                "content": naming_prompt
+            }
+        ]
+    ).choices[0].message.content
+
+    log(f'use_ai_to_gen_podcast_filename: AI came up with the filename: {new_title}')
+
+    new_title = str(new_title).removeprefix('.mp3') # Just in-case
+
+    log('use_ai_to_gen_podcast_filename: end')
+    return new_title or topic.title() # Return the new title name (sanitized just in case), or, as a fallback, the prompt
+
 
 # Ensure needed files exist in workspace
 def set_up():
@@ -261,10 +282,10 @@ if __name__ == '__main__':
         sys.exit(1)
 
     script = make_script(topic, word_count)
+    ai_generated_title = use_ai_to_gen_podcast_filename(topic)
     instructions = parse_into_instructions(script)
     clips = generate_whole_podcast_order(instructions)
-    podcast_path = stitch_clips(clips)
-    print(podcast_path)
+    podcast_path = stitch_clips(clips, ai_generated_title)
     log(f"Main: finished, podcast available at {podcast_path}")
 
     clean_up()
