@@ -1,3 +1,3 @@
 Please make the podcast according to your instructions.
 The topic for the podcast is: {{TOPIC}}.
-The podcast's spoken content should be about {{WORD_LENGTH}} words long.
+Your podcast should be as long as it needs to be to cover everything that's required, but not overly long.

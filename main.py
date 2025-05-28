@@ -59,8 +59,8 @@ client = OpenAI(api_key=get_openai_api_key_from_op())
 log('OpenAI client initialized')
 
 # Method to generate the script
-def make_script(topic: str, approx_word_count: int) -> str:
-    log(f"make_script: start (topic='{topic}', words={approx_word_count})")
+def make_script(topic: str) -> str:
+    log(f"make_script: start (topic='{topic}')")
     # Load the prompts
     log("Loading system prompt")
     with open('prompts/system_prompt.txt', 'r') as f:
@@ -71,8 +71,7 @@ def make_script(topic: str, approx_word_count: int) -> str:
     with open('prompts/user_prompt.txt', 'r') as f:
         user_prompt = f.read()
     user_prompt = user_prompt.replace('{{TOPIC}}', topic)
-    user_prompt = user_prompt.replace('{{WORD_LENGTH}}', str(approx_word_count))
-    log('User prompt loaded and placeholders replaced')
+    log('User prompt loaded and placeholder replaced')
 
     # Use the OpenAI chat completions api to generate the script
     log('Requesting chat completion')
@@ -281,16 +280,8 @@ if __name__ == '__main__':
     set_up()
 
     topic = input("Enter a topic: ")
-    target_length = input("Enter target word count (50-500): ")
 
-    try:
-        word_count = int(target_length)
-        log('Converted input to int')
-    except ValueError:
-        log('Failed to convert the user\'s target length to an integer')
-        sys.exit(1)
-
-    script = make_script(topic, word_count)
+    script = make_script(topic)
     ai_generated_title = use_ai_to_gen_podcast_filename(topic)
     instructions = parse_into_instructions(script)
     clips = generate_whole_podcast_order(instructions)
