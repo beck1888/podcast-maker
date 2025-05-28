@@ -1,0 +1,23 @@
+
+########
+# Hey consider switching to this:
+# Additionally, the gpt-4o-mini-tts model provides a cost-effective alternative, with an estimated cost of $0.015 per minute .
+# Other to-dos in todo file
+########
+
+ideas:
+- use more filler words and light humor
+- timer
+- estimate cost of podcast
+- audiance level (ie like im stupid. graduate school) then use appropriate terms. etc
+- save logs to files
+- sfx
+- background music
+- add terminal spinners
+- improve ai file naming
+- complete sfx
+- give the podcast a name
+- change kate voice
+- have hosts adress eachother by name
+- make kate come in less often
+- give podcast a name
