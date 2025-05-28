@@ -9,6 +9,7 @@ from openai import OpenAI
 import os
 from pydub import AudioSegment
 from datetime import datetime
+from send2trash import send2trash
 
 # Settings
 DEBUG = True
@@ -230,9 +231,25 @@ def stitch_clips(queue: list[str]) -> str:
     log("stitch_clips: end")
     return output_fp
 
+# Ensure needed files exist in workspace
+def set_up():
+    for dirname in ['out', 'tmp']:
+        log(f'Ensuring the {dirname} directory exists')
+        os.makedirs(dirname, exist_ok=True)
+
+# Clean up the tmp directory as we're done with it
+def clean_up():
+    send2trash('tmp')
+    log('removed the tmp directory')
+    client.close()
+    log('closed the openai client')
+
 # Main execution
 if __name__ == '__main__':
     log("Main: start")
+
+    set_up()
+
     topic = input("Enter a topic: ")
     target_length = input("Enter target word count (50-500): ")
 
@@ -249,3 +266,5 @@ if __name__ == '__main__':
     podcast_path = stitch_clips(clips)
     print(podcast_path)
     log(f"Main: finished, podcast available at {podcast_path}")
+
+    clean_up()
