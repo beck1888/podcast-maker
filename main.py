@@ -139,6 +139,13 @@ def parse_into_instructions(script: str) -> list[dict[str, str]]:
             queue.append(instruction)
             log(f"Instruction appended: {instruction}")
     log(f"parse_into_instructions: end, total instructions={len(queue)}")
+
+    # Add our custom items to the queue
+    queue.insert(0, 'public/audio/intro.mp3')
+    log('Added the intro sound effect to the start of the clip queue')
+    queue.append('public/audio/outro.mp3')
+    log('Added the outro sound effect to the end of the clip queue')
+
     return queue
 
 # Method to use OpenAI tts endpoint
