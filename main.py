@@ -187,6 +187,10 @@ def generate_whole_podcast_order(instructions: list[dict[str, str]]) -> list[str
     return audio_clip_queue
 
 def stitch_clips(queue: list[str]) -> str:
+    def speed_up(audio: AudioSegment, speed: float) -> AudioSegment:
+        new_frame_rate = int(audio.frame_rate * speed)
+        return audio._spawn(audio.raw_data, overrides={"frame_rate": new_frame_rate}).set_frame_rate(audio.frame_rate)
+
     # Ensure output directory exists
     out_dir = "out"
     os.makedirs(out_dir, exist_ok=True)
@@ -200,11 +204,12 @@ def stitch_clips(queue: list[str]) -> str:
 
     # Start stitching
     combined = AudioSegment.silent(duration=0)
-    pause = AudioSegment.silent(duration=500)  # 0.5 second pause
+    pause = AudioSegment.silent(duration=200)  # 0.2 second pause
 
     for i, file_path in enumerate(queue):
         clip = AudioSegment.from_mp3(file_path)
-        combined += clip
+        sped_up = speed_up(clip, 1.05) # Speed up the actual voice by 1.05 so it's less slow
+        combined += sped_up
         if i < len(queue) - 1:
             combined += pause
 
@@ -215,7 +220,7 @@ def stitch_clips(queue: list[str]) -> str:
 
 
 if __name__ == '__main__':
-    script = make_script('Culture shocks for American Travelers in Mexico', 50)
+    script = make_script('How to make Pizza', 50)
     instructions = parse_into_instructions(script)
     clips = generate_whole_podcast_order(instructions)
     podcast = stitch_clips(clips)
