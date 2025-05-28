@@ -22,9 +22,12 @@ LANGUAGE: str = 'English'
 def log(message: str) -> None:
     if KEEP_LOGS:
         with open('logs.txt', 'a') as f:
-            timestamp = datetime.now().strftime("%I:%M:%S %p")
-            f.write(f"{timestamp} [DEBUG] {message}\n")
-log('\n'*2)
+            if message == "//space_out_logs;":
+                f.write('\n'*2)
+            else:
+                timestamp = datetime.now().strftime("%I:%M:%S %p")
+                f.write(f"{timestamp} [DEBUG] {message}\n")
+log('//space_out_logs;')
 log("STARTING NEW LOG")
 
 # API Key getter from 1Password
@@ -291,7 +294,7 @@ def clean_up():
     client.close()
     log('closed the openai client')
     log("ENDING LOG RUN")
-    log("\n"*2)
+    log('//space_out_logs;')
 
 # Main execution
 if __name__ == '__main__':
