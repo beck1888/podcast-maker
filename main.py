@@ -3,6 +3,7 @@ import json
 import subprocess
 import re
 import hashlib
+from typing import Any
 from pathlib import Path
 from terminal import spinner, Item
 from openai import OpenAI
@@ -17,6 +18,73 @@ AI_MODEL_FOR_WRITING_SCRIPT: str = 'gpt-4.1'
 SPEECH_SPEED_MULTIPLIER: float = 1.04
 DELAY_BETWEEN_CLIPS_IN_MS: float = 200
 LANGUAGE: str = 'English'
+
+def log_api_call_cost(model: str, token_type: str, content_length: int):
+    with open('tmp/api_calls.json', 'r') as f:
+        api_call_data: list[dict[str, Any]] = json.load(f)
+
+    api_call_data.append(
+        {
+            'model': model,
+            'type': token_type,
+            'length': content_length
+        }
+    )
+
+    with open('tmp/api_calls.json', 'w') as f:
+        json.dump(api_call_data, f, indent=4)
+
+    log('updated api call cost log')
+
+def calculate_api_call_cost_sum_for_run():
+    with open('tmp/api_calls.json', 'r') as f:
+        api_call_data: list[dict[str, Any]] = json.load(f)
+
+    log(f'opened api call data to sum up, found {str(len(api_call_data))} entries')
+
+    sum = 0
+
+    for call in api_call_data:
+        model = call['model']
+        token_type = call['type']
+        length = call['length']
+
+        log(f"Processing API call: model={model}, type={token_type}, length={length}")
+
+        if model == 'tts-1':
+            cost_per_token = 0.000015
+            sum += length * cost_per_token
+            log(f"Added cost for model 'tts-1': {length * cost_per_token}")
+
+        elif model == 'gpt-4.1-nano':
+            tokens = length / 3 # approx 3 chars per token because of dense-sih xml
+            log(f"Calculated tokens for 'gpt-4.1-nano': {tokens}")
+            if token_type == 'input':
+                cost_per_token = 0.0000001
+            elif token_type == 'output':
+                cost_per_token = 0.0000004
+            
+            sum += tokens * cost_per_token
+            log(f"Added cost for model 'gpt-4.1-nano': {tokens * cost_per_token}")
+
+        elif model == 'gpt-4.1':
+            tokens = length / 3 # approx 3 chars per token because of dense-sih xml
+            log(f"Calculated tokens for 'gpt-4.1': {tokens}")
+            if token_type == 'input':
+                cost_per_token = 0.000002
+            elif token_type == 'output':
+                cost_per_token = 0.000008
+
+            sum += tokens * cost_per_token
+            log(f"Added cost for model 'gpt-4.1': {tokens * cost_per_token}")
+
+        else:
+            log(f"Invalid API call found, not added to sum: {str(call)}")
+
+
+    sum = round(sum, 2)
+    log(f'estimated run cost is {str(sum)} dollars')
+    return sum
 
 # Uniform debug logging function
 def log(message: str) -> None:
@@ -86,6 +154,13 @@ def make_script(topic: str, lang: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user",   "content": user_prompt}
         ]
+    
+    length_of_input_tokens = len(system_prompt) + len(user_prompt)
+    log_api_call_cost(
+        model=AI_MODEL_FOR_WRITING_SCRIPT,
+        token_type='input',
+        content_length=length_of_input_tokens
+    )
 
     # Log the system messages in logs for easier debugging
     log('make_script: logging script wiring api messages next')
@@ -103,6 +178,12 @@ def make_script(topic: str, lang: str) -> str:
     )
     script = response.choices[0].message.content
     log('make_script: Chat completion received')
+
+    log_api_call_cost(
+        model=AI_MODEL_FOR_WRITING_SCRIPT,
+        token_type='output',
+        content_length=len(script)
+    )
 
     result = script or "Error generating podcast!"
     log(f"make_script: end, result length={len(result)}")
@@ -181,6 +262,12 @@ def generate_speech(speaker_name: str, speech_content: str, speech_hash: str) ->
     log("TTS API response received, writing to file")
     audio_response.write_to_file(speech_file_path)
     log(f"Audio written to {speech_file_path}")
+
+    log_api_call_cost(
+        model='tts-1',
+        token_type='text',
+        content_length=len(speech_content)
+    )
 
     return str(speech_file_path)
 
@@ -262,6 +349,8 @@ def use_ai_to_gen_podcast_filename(topic: str) -> str:
     log('use_ai_to_gen_podcast_filename: start')
     naming_prompt: str = f"A person has just gotten done making a podcast about this topic: {topic}. Please give the file name for the podcast a clear and super short title of 2-3 words so it's easy to find. Use title case. Return just the file name and nothing else (no extensions, etc). Prioritize clarity and specificity over grammar."
 
+    log_api_call_cost('gpt-4.1-nano', 'input', len(naming_prompt))
+
     log('use_ai_to_gen_podcast_filename: calling api')
     new_title = client.chat.completions.create(
         model='gpt-4.1-nano',
@@ -272,6 +361,9 @@ def use_ai_to_gen_podcast_filename(topic: str) -> str:
             }
         ]
     ).choices[0].message.content
+
+    log_api_call_cost('gpt-4.1-nano', 'output', len(str(new_title)))
+
 
     log(f'use_ai_to_gen_podcast_filename: AI came up with the filename: {new_title}')
 
@@ -286,6 +378,9 @@ def set_up():
     for dirname in ['out', 'tmp']:
         log(f'Ensuring the {dirname} directory exists')
         os.makedirs(dirname, exist_ok=True)
+    
+    with open('tmp/api_calls.json', 'w') as f:
+        json.dump([], f)
 
 # Clean up the tmp directory as we're done with it
 def clean_up():
@@ -305,18 +400,18 @@ if __name__ == '__main__':
     topic = input("Enter a topic: ")
 
     with spinner("Writing script"):
-        script = make_script(topic, lang=LANGUAGE)
+        script = make_script(topic, lang=LANGUAGE) # log token cost = true
 
     with spinner("Generating title"):
-        ai_generated_title = use_ai_to_gen_podcast_filename(topic)
+        ai_generated_title = use_ai_to_gen_podcast_filename(topic) # # log token cost = true
 
     with spinner("Parsing script"):
-        instructions = parse_into_instructions(script)
+        instructions = parse_into_instructions(script) # log token cost = skip, n/a
 
     with spinner("Generating audio clips"):
         clips = generate_whole_podcast_order(instructions)
 
-    with spinner("Stitching clips"):
+    with spinner("Stitching clips"): # log token cost = skip, n/a
         podcast_path = stitch_clips(
             queue=clips,
             podcast_name_to_use=ai_generated_title,
@@ -325,7 +420,11 @@ if __name__ == '__main__':
         )
 
     Item.checked(f"Podcast available at: '\033[33m{podcast_path}\033[0m'", indent=False) # Print final path in Yellow
+
+    cost = calculate_api_call_cost_sum_for_run()
     
-    log(f"Main: finished, podcast available at {podcast_path}")
+    log(f"Main: finished, podcast available at {podcast_path} | Cost: {str(cost)} dollars")
+
+    ...
 
     clean_up()
