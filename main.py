@@ -294,7 +294,7 @@ if __name__ == '__main__':
     ai_generated_title = use_ai_to_gen_podcast_filename(topic)
     instructions = parse_into_instructions(script)
     clips = generate_whole_podcast_order(instructions)
-    podcast_path = stitch_clips(clips, ai_generated_title, speed=10.05)
+    podcast_path = stitch_clips(clips, ai_generated_title, speed=1.05)
     log(f"Main: finished, podcast available at {podcast_path}")
 
     clean_up()
