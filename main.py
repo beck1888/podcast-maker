@@ -146,8 +146,8 @@ def parse_into_instructions(script: str) -> list[dict[str, str]]:
 # Method to use OpenAI tts endpoint
 def generate_speech(speaker_name: str, speech_content: str, speech_hash: str) -> str:
     log(f"generate_speech: start (speaker='{speaker_name}')")
-    voice_map = {"alice": "alloy", "bob": "ash"}
-    use_api_voice = voice_map.get(speaker_name, 'alloy')
+    voice_map = {"emma": "nova", "charlie": "echo"}
+    use_api_voice = voice_map.get(speaker_name, 'ballad') # 'ballad' is a fallback
     log(f"Using API voice '{use_api_voice}' for speaker '{speaker_name}'")
 
     speech_hash_fp = speech_hash + ".mp3"

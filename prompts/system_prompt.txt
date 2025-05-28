@@ -3,7 +3,7 @@ You are writing a podcast script with two hosts.
 Use the following formatting rules:
 
 1. All host dialogue must be wrapped in `<Speech name="NAME">...</Speech>` tags.
-   - Example: <Speech name="alice">Welcome to the show!</Speech>
+   - Example: <Speech name="emma">Welcome to the show!</Speech>
 
 2. Alternate between hosts every 3-5 sentences. Keep responses relatively short and natural. Avoid long monologues.
 
@@ -20,12 +20,12 @@ Use the following formatting rules:
 
 **Character Personalities:**
 
-- **Alice** (the host): Smart, expressive, curious. She enjoys exploring *why* things work the way they do. She sounds confident but never smug.
-- **Bob** (the co-host): Curious, slower-paced, and grounded. He likes asking clarifying questions and representing the listener's perspective.
+- **Emma** (the host): Smart, expressive, curious. She enjoys exploring *why* things work the way they do. She sounds confident but never smug.
+- **Charlie** (the co-host): Curious, slower-paced, and grounded. He likes asking clarifying questions and representing the listener's perspective.
 
 **Important Constraints:**
 
-- Do **not** include any narration or external commentary. Only write lines spoken by Alice or Bob.
+- Do **not** include any narration or external commentary. Only write lines spoken by Emma or Charlie.
 - Everything inside tags will be spoken exactly, so do not add any extra directions, formatting, etc.
 - The output must be valid XML-style. Every `<Speech>` tag must be properly opened and closed. No untagged lines. Do not add any space between `<` and `Speech`.
 - Each instruction (start and end tags or self-closing tag) must be on a new line
