@@ -1,10 +1,10 @@
 # Imports
-import sys
 import json
 import subprocess
 import re
 import hashlib
 from pathlib import Path
+from terminal import spinner, Item
 from openai import OpenAI
 import os
 from pydub import AudioSegment
@@ -12,21 +12,17 @@ from datetime import datetime
 from send2trash import send2trash
 
 # Settings
-DEBUG = True
-VALID_SFX = {
-    "laugh_track",
-    "incorrect_buzzer",
-    "correct_buzzer",
-    "audience_clap",
-    "audience_boo",
-    "audience_cheer"
-}
+KEEP_LOGS: bool = True
+AI_MODEL_FOR_WRITING_SCRIPT: str = 'gpt-4.1'
+SPEECH_SPEED_MULTIPLIER: float = 1.04
+DELAY_BETWEEN_CLIPS_IN_MS: float = 200
 
 # Uniform debug logging function
 def log(message: str) -> None:
-    if DEBUG:
-        timestamp = datetime.now().strftime("%I:%M:%S %p")
-        print(f"{timestamp} [DEBUG] {message}")
+    if KEEP_LOGS:
+        with open('logs.txt', 'a') as f:
+            timestamp = datetime.now().strftime("%I:%M:%S %p")
+            f.write(f"{timestamp} [DEBUG] {message}\n")
 
 # API Key getter from 1Password
 def get_openai_api_key_from_op(item_name: str = "OpenAI API Key", field: str = "credential") -> str:
@@ -76,7 +72,7 @@ def make_script(topic: str) -> str:
     # Use the OpenAI chat completions api to generate the script
     log('Requesting chat completion')
     response = client.chat.completions.create(
-        model='gpt-4.1-mini',
+        model=AI_MODEL_FOR_WRITING_SCRIPT,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user",   "content": user_prompt}
@@ -196,8 +192,10 @@ def generate_whole_podcast_order(instructions: list[dict[str, str]]) -> list[str
     return audio_clip_queue
 
 # Method to stitch clips together and speed up audio
-def stitch_clips(queue: list[str], podcast_name_to_use: str, speed: float) -> str:
+def stitch_clips(queue: list[str], podcast_name_to_use: str, speed: float, delay_between_clips: float) -> str:
     log("stitch_clips: start")
+
+    log(f'stich_clips: received params (podcast_name_to_use={podcast_name_to_use}, speed={str(speed)}, delay={str(delay_between_clips)})')
 
     def speed_up(audio: AudioSegment, speed: float) -> AudioSegment:
         log(f"speed_up: original frame_rate={audio.frame_rate}, speed={speed}")
@@ -213,7 +211,7 @@ def stitch_clips(queue: list[str], podcast_name_to_use: str, speed: float) -> st
     log(f"Output file determined: {output_fp}")
 
     combined = AudioSegment.silent(duration=0)
-    pause = AudioSegment.silent(duration=200)
+    pause = AudioSegment.silent(duration=delay_between_clips)
 
     for i, file_path in enumerate(queue):
         log(f"stitch_clips: processing file {i}: {file_path}")
@@ -281,11 +279,28 @@ if __name__ == '__main__':
 
     topic = input("Enter a topic: ")
 
-    script = make_script(topic)
-    ai_generated_title = use_ai_to_gen_podcast_filename(topic)
-    instructions = parse_into_instructions(script)
-    clips = generate_whole_podcast_order(instructions)
-    podcast_path = stitch_clips(clips, ai_generated_title, speed=1.05)
+    with spinner("Writing script"):
+        script = make_script(topic)
+
+    with spinner("Generating title"):
+        ai_generated_title = use_ai_to_gen_podcast_filename(topic)
+
+    with spinner("Parsing script"):
+        instructions = parse_into_instructions(script)
+
+    with spinner("Generating audio clips"):
+        clips = generate_whole_podcast_order(instructions)
+
+    with spinner("Stitching clips"):
+        podcast_path = stitch_clips(
+            queue=clips,
+            podcast_name_to_use=ai_generated_title,
+            speed=SPEECH_SPEED_MULTIPLIER,
+            delay_between_clips=DELAY_BETWEEN_CLIPS_IN_MS
+        )
+
+    Item.checked(f"Podcast available at: '\033[33m{podcast_path}\033[0m'", indent=False) # Print final path in Yellow
+    
     log(f"Main: finished, podcast available at {podcast_path}")
 
     clean_up()
